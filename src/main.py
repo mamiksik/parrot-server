@@ -6,12 +6,11 @@ from transformers import (
     AutoTokenizer,
     AutoModelForMaskedLM,
     pipeline,
-    Pipeline,
     T5ForConditionalGeneration,
     RobertaTokenizer,
 )
 
-from resources import Prediction, SummarizePayload, InputPayload
+from src.resources import Prediction, SummarizePayload, InputPayload
 
 app = FastAPI()
 shared_resources = {}
