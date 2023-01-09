@@ -3,7 +3,6 @@ from functools import lru_cache
 import torch
 from fastapi import FastAPI
 from transformers import (
-    AutoTokenizer,
     AutoModelForMaskedLM,
     pipeline,
     T5ForConditionalGeneration,
@@ -13,7 +12,6 @@ from transformers import (
 from src.resources import Prediction, SummarizePayload, InputPayload
 
 app = FastAPI()
-shared_resources = {}
 
 
 @lru_cache()
@@ -27,13 +25,6 @@ def model_tokenizer(tokenizer_name, model_name, type):
         raise ValueError("Invalid model type")
 
     return tokenizer, model
-
-
-@app.on_event("startup")
-async def startup_event():
-    tokenizer = AutoTokenizer.from_pretrained("mamiksik/CommitPredictor")
-    model = AutoModelForMaskedLM.from_pretrained("mamiksik/CommitPredictor")
-    shared_resources["pipe"] = pipeline("fill-mask", model=model, tokenizer=tokenizer)
 
 
 @app.get("/")
