@@ -14,5 +14,5 @@ class SummarizePayload(InputPayload):
 
 
 class Prediction(BaseModel):
-    score: str
+    score: int
     token_str: str
