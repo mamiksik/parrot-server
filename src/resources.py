@@ -6,8 +6,7 @@ class InputPayload(BaseModel):
 
 
 class SummarizePayload(InputPayload):
-    lang: str
-    min_length: int = 5
+    min_length: int = 2
     max_length: int = 100
     num_beams: int = 7
     prediction_count: int = 5

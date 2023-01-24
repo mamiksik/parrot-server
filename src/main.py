@@ -2,29 +2,12 @@ from functools import lru_cache
 
 import torch
 from fastapi import FastAPI
-from transformers import (
-    AutoModelForMaskedLM,
-    pipeline,
-    T5ForConditionalGeneration,
-    RobertaTokenizer,
-)
+from transformers import pipeline
 
 from src.resources import Prediction, SummarizePayload, InputPayload
+from src.utils import model_tokenizer, parse_git_diff
 
 app = FastAPI()
-
-
-@lru_cache()
-def model_tokenizer(tokenizer_name, model_name, model_type, *, model_revision='main'):
-    tokenizer = RobertaTokenizer.from_pretrained(tokenizer_name)
-    if model_type == "t5":
-        model = T5ForConditionalGeneration.from_pretrained(model_name, revision=model_revision)
-    elif model_type == "roberta":
-        model = AutoModelForMaskedLM.from_pretrained(model_name, revision=model_revision)
-    else:
-        raise ValueError("Invalid model type")
-
-    return tokenizer, model
 
 
 @app.get("/")
@@ -52,6 +35,10 @@ async def summarize(payload: SummarizePayload) -> list[Prediction]:
         "mamiksik/CommitPredictorT5PL", "mamiksik/CommitPredictorT5PL", "t5", model_revision='fb08d01'
     )
 
+    # If input is empty
+    if not payload.inputs:
+        return []
+
     with torch.no_grad():
         input_ids = tokenizer(
             payload.inputs,
@@ -70,3 +57,10 @@ async def summarize(payload: SummarizePayload) -> list[Prediction]:
 
     result = tokenizer.batch_decode(outputs, skip_special_tokens=True)
     return [Prediction(score=-1, token_str=prediction) for prediction in result]
+
+
+@app.post("/summarize-raw")
+async def summarize_raw(payload: SummarizePayload) -> list[Prediction]:
+    payload.inputs = parse_git_diff(payload.inputs)
+    result = await summarize(payload)
+    return result
