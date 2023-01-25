@@ -5,6 +5,12 @@ class InputPayload(BaseModel):
     inputs: str
 
 
+class FillMask(BaseModel):
+    inputs: str
+    message_prefix: str
+    message_suffix: str
+
+
 class SummarizePayload(InputPayload):
     min_length: int = 2
     max_length: int = 100
@@ -13,5 +19,5 @@ class SummarizePayload(InputPayload):
 
 
 class Prediction(BaseModel):
-    score: int
+    score: float
     token_str: str

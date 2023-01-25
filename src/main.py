@@ -4,7 +4,7 @@ import torch
 from fastapi import FastAPI
 from transformers import pipeline
 
-from src.resources import Prediction, SummarizePayload, InputPayload
+from src.resources import Prediction, SummarizePayload, InputPayload, FillMask
 from src.utils import model_tokenizer, parse_git_diff
 
 app = FastAPI()
@@ -16,16 +16,19 @@ async def status():
 
 
 @app.post("/fill-token")
-async def predict_compatibility(payload: InputPayload) -> list[Prediction]:
+async def predict_compatibility(payload: FillMask) -> list[Prediction]:
     tokenizer, model = model_tokenizer(
         "mamiksik/CommitPredictor", "mamiksik/CommitPredictor", "roberta"
     )
     pipe = pipeline("fill-mask", model=model, tokenizer=tokenizer)
 
-    result = pipe.predict(payload.inputs)
+    results = []
+    results += pipe(f"{payload.inputs}</sep></sep><msg>{payload.message_prefix}<mask>{payload.message_suffix}")
+    results.sort(key=lambda x: x["score"], reverse=True)
+
     return [
         Prediction(score=prediction["score"], token_str=prediction["token_str"])
-        for prediction in result
+        for prediction in results
     ]
 
 
